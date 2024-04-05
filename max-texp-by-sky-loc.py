@@ -312,6 +312,7 @@ if __name__ == '__main__':
     max_texp         = float(config.get("params","max_texp"))
     
     allsky_dir = obs_scenario_dir+'/allsky/'
+    texp_out_dir = out_dir+'/texp_out/'
     
     ## run the script
-    max_texp_by_sky_loc(allsky_dir,out_dir,batch_file,band,source_mag,dist_measure,max_texp=max_texp)
+    max_texp_by_sky_loc(allsky_dir,texp_out_dir,batch_file,band,source_mag,dist_measure,max_texp=max_texp)
