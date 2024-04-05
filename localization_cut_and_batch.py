@@ -3,7 +3,7 @@
 
 import numpy as np
 import pandas as pd
-import os, sys
+import os, sys, configparser
 import argparse
 
 
@@ -69,14 +69,41 @@ if __name__ == '__main__':
     
     ## set up argparser
     parser = argparse.ArgumentParser(description="Prepare a LVK oberving run scenario for UVEX localization calculations.")
-    parser.add_argument('allsky_file', type=str, help='/path/to/allsky_file.dat')
-    parser.add_argument('out_dir', type=str, help='/path/to/output/directory/')
-    parser.add_argument('--max_area', type=float, help='Maximum sky localization area to trigger on in sq. deg..',default=100)
-    parser.add_argument('--nobatch', action='store_true', help='Turn off batching.')
-    parser.add_argument('--N_batch', type=int, help='Number of batch files.', default=20)
+    parser.add_argument('params', type=str, help='/path/to/params_file.ini')
     
     args = parser.parse_args()
     
-    batch = not args.nobatch
+    ## set up configparser
+    config = configparser.ConfigParser()
+    config.read(args.params)
     
-    downselect_and_batch(args.allsky_file,args.out_dir,max_area=args.max_area,batch=batch,N_batch=args.N_batch)
+    ## get info from params file
+    obs_scenario_dir = config.get("params","obs_scenario")
+    out_dir          = config.get("params","save_directory")
+    max_area         = float(config.get("params","max_area",fallback=100))
+    N_batch          = int(config.get("params","N_batch", fallback=1))
+    
+    ## set additional variables accordingly
+    if N_batch==1:
+        batch = False
+    else:
+        batch = True
+    
+    allsky_file = obs_scenario_dir+'/allsky/allsky.dat'
+    
+    ## run the script
+    downselect_and_batch(allsky_file,out_dir,max_area=max_area,batch=batch,N_batch=N_batch)
+    
+    
+#     parser.add_argument('allsky_file', type=str, help='/path/to/allsky_file.dat')
+#     parser.add_argument('out_dir', type=str, help='/path/to/output/directory/')
+#     parser.add_argument('--max_area', type=float, help='Maximum sky localization area to trigger on in sq. deg..',default=100)
+#     parser.add_argument('--nobatch', action='store_true', help='Turn off batching.')
+#     parser.add_argument('--N_batch', type=int, help='Number of batch files.', default=20)
+    
+#     args = parser.parse_args()
+    
+#     batch = not args.nobatch
+#     
+#     downselect_and_batch(args.allsky_file,args.out_dir,max_area=args.max_area,batch=batch,N_batch=args.N_batch)
+    
