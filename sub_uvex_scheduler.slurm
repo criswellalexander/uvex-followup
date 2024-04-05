@@ -17,10 +17,6 @@ conda activate uvenv-etc-update
 ## $2 is the schedule output directory
 ## $3 is the downselected allsky CSV, with exposure times. Needs to have 'event_id' and 't_exp (ks)' columns.
 
-SKYMAP_DIR=$1
-SCHED_DIR=$2
-#TEXP_FILE=$3
-
 PARAMS_FILE=$1
 #TEXP_FILE=$2
 
@@ -28,6 +24,8 @@ PARAMS_FILE=$1
 OUTDIR=`grep "^save_directory="  ${PARAMS_FILE} | python3 -c "print(input().split('=')[1])"`
 SKYMAP_DIR=`grep "^obs_scenario="  ${PARAMS_FILE} | python3 -c "print(input().split('=')[1]+'/allsky/')"`
 DURATION=`grep "^tiling_time="  ${PARAMS_FILE} | python3 -c "print(input().split('=')[1])"`
+
+SCHED_DIR="${OUTDIR}/schedules/"
 
 
 ## field1 is event number, field2 is exposure time in ks
