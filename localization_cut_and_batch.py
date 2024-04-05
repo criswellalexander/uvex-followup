@@ -81,7 +81,7 @@ if __name__ == '__main__':
     obs_scenario_dir = config.get("params","obs_scenario")
     out_dir          = config.get("params","save_directory")
     max_area         = float(config.get("params","max_area",fallback=100))
-    N_batch          = int(config.get("params","N_batch", fallback=1))
+    N_batch          = int(config.get("params","N_batch_preproc", fallback=1))
     
     ## set additional variables accordingly
     if N_batch==1:

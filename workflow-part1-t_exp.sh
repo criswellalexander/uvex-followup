@@ -8,7 +8,7 @@
 
 PARAMS_FILE=$1
 
-## this grabs the save_diretory line from the params file
+## this grabs the save_directory line from the params file
 OUTDIR=`grep "^save_directory="  ${PARAMS_FILE} | python3 -c "print(input().split('=')[1])"`
 ## make directories
 mkdir $OUTDIR

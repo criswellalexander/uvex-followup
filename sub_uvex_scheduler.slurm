@@ -21,13 +21,22 @@ SKYMAP_DIR=$1
 SCHED_DIR=$2
 #TEXP_FILE=$3
 
+PARAMS_FILE=$1
+#TEXP_FILE=$2
+
+## extract relevant lines
+OUTDIR=`grep "^save_directory="  ${PARAMS_FILE} | python3 -c "print(input().split('=')[1])"`
+SKYMAP_DIR=`grep "^obs_scenario="  ${PARAMS_FILE} | python3 -c "print(input().split('=')[1]+'/allsky/')"`
+DURATION=`grep "^tiling_time="  ${PARAMS_FILE} | python3 -c "print(input().split('=')[1])"`
+
+
 ## field1 is event number, field2 is exposure time in ks
-tail -n +2 $3 | while IFS=, read -r field1 field2; do
+tail -n +2 $2 | while IFS=, read -r field1 field2; do
 	num=$field1
 	texp=$field2
 	echo "Processing event ${num}..."
 	echo "Exposure time is ${texp} ks."
-	dorado-scheduling "${SKYMAP_DIR}/${num}.fits" -o "${SCHED_DIR}/${num}.ecsv" -j --mission=uvex --exptime="${texp} ks" --duration="3 hr" --roll-step='360 deg' --skygrid-method=sinusoidal --skygrid-step='10 deg2' --nside=128 --delay='10 yr'
+	dorado-scheduling "${SKYMAP_DIR}/${num}.fits" -o "${SCHED_DIR}/${num}.ecsv" -j --mission=uvex --exptime="${texp} ks" --duration="${DURATION}" --roll-step='360 deg' --skygrid-method=sinusoidal --skygrid-step='10 deg2' --nside=128 --delay='10 yr'
 done
 
 conda deactivate
