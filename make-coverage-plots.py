@@ -159,7 +159,28 @@ def arr2bounds(arr,fmt='default'):
 
 def get_plots_and_stats(allsky_file,coverage_file,outdir,band,mag_AB,astro_rate,sim_rate,run_duration,max_texp,coverage_threshold=99):
     '''
-    All-in-one function for now. Should rework this to have individual fx to handle plots/stats + loop in the s2a fx from my Roman work. To-do for Mon/Tues.
+    Function to compute follow-up statistics and make relevant plots.
+    
+    The statistics quoted account for the combination of lognormal astrophysical rate uncertainty and Poisson count error.
+    
+    Simulated event rate can be found from an observing scenario by doing:
+    > sqlite3 events.sqlite 
+    > select comment from process;
+    This will give you the simulated rate in yr^-1 Mpc^-3.
+    
+    Arguments
+    --------------------------------
+    allsky_file (str) : /path/to/allsky.dat
+    coverage_file (str) : /path/to/coverage_file.txt (as produced by compute_tiling.py)
+    outdir (str)        : /path/to/save/directory/
+    band (str)          : UV band being considered.
+    mag_AB (float)      : Assumed kilonova absolute bolometric magnitude.
+    astro_rate (list of floats) : Astrophysical rate estimate to use. Must be given as [median, lower bound, upper bound] in yr^-1 Gpc^-3.
+    sim_rate (float)            : Simulated event rate in yr^-1 Gpc^-3. See note above.
+    run_duration (float)        : Duration of the observing run to be simulated, in years. 
+    max_texp (float)            : Maximum allowed per-field exposure time.
+    coverage_threshold (float)  : Percent coverage of the GW 90% credible localization required to select an event as a ToO trigger. Default 99.
+    
     '''
     ## note that this varies from simulation to simulation
     ## find yours by doing:
@@ -176,8 +197,8 @@ def get_plots_and_stats(allsky_file,coverage_file,outdir,band,mag_AB,astro_rate,
     ## filter to events that are well-covered and account for sun exclusion
     ## improvement point: could actually query where the sun is at observation time, define exclusion radius, and check for overlap with localization region.
     ## This could be a fun project for someone!
-    obs_id_list = events_sched[events_sched['percent_coverage']>=cov_threshold]['event_id'].to_list()
-    obs_texp_list = events_sched[events_sched['percent_coverage']>=cov_threshold]['texp_sched (ks)'].to_list()
+    obs_id_list = events_sched[events_sched['percent_coverage']>=coverage_threshold]['event_id'].to_list()
+    obs_texp_list = events_sched[events_sched['percent_coverage']>=coverage_threshold]['texp_sched (ks)'].to_list()
 
     events_lowcov = events_all[[(ev_id in events_sched[events_sched['percent_coverage'].to_numpy() < 5]['event_id'].to_list()) for ev_id in events_all['simulation_id'].to_list()]]
 
@@ -196,7 +217,7 @@ def get_plots_and_stats(allsky_file,coverage_file,outdir,band,mag_AB,astro_rate,
     ## mark out # of tiles = 0 FoR
     ## texp long and rejected gets marked with grey x
     ## three rejection categories: completely excluded, partially excluded, can't be tiled under time constraints
-    events_notcov = events_all[[(ev_id in events_sched[events_sched['percent_coverage'].to_numpy() < cov_threshold]['event_id'].to_list()) for ev_id in events_all['simulation_id'].to_list()]]
+    events_notcov = events_all[[(ev_id in events_sched[events_sched['percent_coverage'].to_numpy() < coverage_threshold]['event_id'].to_list()) for ev_id in events_all['simulation_id'].to_list()]]
     events_0cov = events_notcov[[(ev_id in events_sched[events_sched['percent_coverage'].to_numpy() < 0.01]['event_id'].to_list()) for ev_id in events_notcov['simulation_id'].to_list()]]
     events_0cov_id_list = events_0cov['simulation_id'].to_list()
     events_semicov = events_notcov[[(ev_id in events_sched[events_sched['percent_coverage'].to_numpy() >= 0.01]['event_id'].to_list()) for ev_id in events_notcov['simulation_id'].to_list()]]
@@ -222,7 +243,7 @@ def get_plots_and_stats(allsky_file,coverage_file,outdir,band,mag_AB,astro_rate,
 
     ## get statistics on number of events *in princple* coverable vs. those we actually observe
     ## THESE SHOULD BE UPDATED LATER TO ACCOUNT FOR THE CATEGORIZATION ABOVE
-    events_midcov = events_sched[(events_sched['percent_coverage'] < cov_threshold)].copy()
+    events_midcov = events_sched[(events_sched['percent_coverage'] < coverage_threshold)].copy()
     midcov_areas = [events_all[events_all['simulation_id']==ev_id]['area(90)'].to_numpy()[0] for ev_id in events_midcov['event_id']]
     events_midcov['area(90)'] = midcov_areas
     midcov_frac_coverable = len(events_midcov[np.round((max_texp/1e3)/events_midcov['texp_sched (ks)']) > np.round(events_midcov['area(90)']/10)])/len(events_midcov)
@@ -343,7 +364,7 @@ def get_plots_and_stats(allsky_file,coverage_file,outdir,band,mag_AB,astro_rate,
     plt.figure()
     ax = plt.figure().gca()
     plt.hist(obs_tile_arr,bins=20,color='mediumorchid')
-    plt.title("Histogram of Tiles to Reach {}% Coverage of 90% c.l. Localization Region".format(cov_threshold))
+    plt.title("Histogram of Tiles to Reach {}% Coverage of 90% c.l. Localization Region".format(coverage_threshold))
     plt.xlabel("Tiles")
     plt.ylabel("Count")
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))
