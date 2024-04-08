@@ -18,15 +18,18 @@ OUTDIR=`grep "^save_directory="  ${PARAMS_FILE} | python3 -c "print(input().spli
 ## make directories
 mkdir "${OUTDIR}/schedules/"
 
+## get absolute path to the uvex-followup directory
+FOLLWUP_DIR=`dirname -- "$( readlink -f -- "$0"; )";`
+
 echo "Preprocessing..."
-python3 /home/vuk/crisw015/UVEX/uvex-followup-etc-update/texp_cut_and_batch.py $PARAMS_FILE
+python3 ${FOLLWUP_DIR}/texp_cut_and_batch.py $PARAMS_FILE
 
 echo "t_exp processing, formatting, and rebatching complete. Beginning scheduler submission..."
 
 for FILE in ${OUTDIR}/texp_sched/*
 do
     echo "Submitting scheduler for batch file ${FILE}..."
-    sbatch /home/vuk/crisw015/UVEX/uvex-followup-etc-update/sub_uvex_scheduler.slurm $PARAMS_FILE $FILE
+    sbatch ${FOLLWUP_DIR}/sub_uvex_scheduler.slurm $PARAMS_FILE $FILE
 done
 
 echo "Done! All jobs submitted."

@@ -17,12 +17,17 @@
 # ALLSKY_SCHED="${OUTDIR}/allsky_sched_full.txt"
 # SCHED_DIR="${OUTDIR}/schedules/"
 # ALLSKY_COV="${OUTDIR}/allsky_coverage_full.txt"
-echo "Computing UVEX coverage for all events..."
 
-python3 /home/vuk/crisw015/UVEX/uvex-followup-etc-update//compute_tiling.py $PARAMS_FILE
+PARAMS_FILE=$1
+
+## get absolute path to the uvex-followup directory
+FOLLWUP_DIR=`dirname -- "$( readlink -f -- "$0"; )";`
+
+echo "Computing UVEX coverage for all events..."
+python3 ${FOLLWUP_DIR}/compute_tiling.py $PARAMS_FILE
 
 echo "Getting statistics and making plots..."
-python3 /home/vuk/crisw015/UVEX/uvex-followup-etc-update//make-coverage-plots.py $PARAMS_FILE
+python3 ${FOLLWUP_DIR}/make-coverage-plots.py $PARAMS_FILE
 
 ## package for easy download
 # zip "${OUTDIR}/results.zip" "${OUTDIR}/uvex_*"

@@ -14,12 +14,15 @@ OUTDIR=`grep "^save_directory="  ${PARAMS_FILE} | python3 -c "print(input().spli
 mkdir $OUTDIR
 mkdir "${OUTDIR}/texp_out"
 
-python3 /home/vuk/crisw015/UVEX/uvex-followup-etc-update/localization_cut_and_batch.py $PARAMS_FILE
+## get absolute path to the uvex-followup directory
+FOLLWUP_DIR=`dirname -- "$( readlink -f -- "$0"; )";`
+
+python3 ${FOLLOWUP_DIR}/localization_cut_and_batch.py $PARAMS_FILE
 
 for FILE in ${OUTDIR}/batches/*
 do
     echo "Submitting exposure time calculation for batch file ${BATCH_FILE}..."
-    sbatch /home/vuk/crisw015/UVEX/uvex-followup-etc-update/sub_max_texp_calc.slurm $PARAMS_FILE $BATCH_FILE
+    sbatch ${FOLLOWUP_DIR}/sub_max_texp_calc.slurm $PARAMS_FILE $BATCH_FILE
 done
 
 echo "Done! All jobs submitted."
