@@ -17,14 +17,14 @@ import argparse
 import scipy.stats as st
 from scipy import special, integrate, optimize
 
-def get_trigger_quote(area_cut, run='O5', run_dur=1, event_type='bns',astro_rate=bns_astro_rate,sim_rate=bns_sim_rate):
+def get_trigger_quote(area_cut, astro_rate, sim_rate, run='O5', run_dur=1, event_type='bns'):
 
-s2a_conversion_factor = get_s2a_with_err(*astro_rate,sim_rate,duration=run_dur)
-allsky = pd.read_csv(".data/{}/{}_astro/allsky.dat".format(run,event_type), skiprows=1, sep='\t')
-cut_idx = allsky['area(90)'] <= area_cut
-N= = len(allsky[cut_idx])*s2a_conversion_factor 
+    s2a_conversion_factor = get_s2a_with_err(*astro_rate,sim_rate,duration=run_dur)
+    allsky = pd.read_csv(".data/{}/{}_astro/allsky.dat".format(run,event_type), skiprows=1, sep='\t')
+    cut_idx = allsky['area(90)'] <= area_cut
+    N = len(allsky[cut_idx])*s2a_conversion_factor 
 
-return N
+    return N
 
 
 @np.vectorize
@@ -158,7 +158,7 @@ def arr2bounds(arr,fmt='default'):
     
     return stat_string
 
-def get_plots_and_stats(allsky_file,coverage_file,outdir,band,mag_AB,astro_rate,sim_rate,run_duration,max_texp,coverage_threshold=99):
+def get_plots_and_stats(allsky_file,coverage_file,outdir,N_batch,band,mag_AB,astro_rate,sim_rate,run_duration,max_texp,coverage_threshold=99):
     '''
     Function to compute follow-up statistics and make relevant plots.
     
@@ -174,6 +174,7 @@ def get_plots_and_stats(allsky_file,coverage_file,outdir,band,mag_AB,astro_rate,
     allsky_file (str) : /path/to/allsky.dat
     coverage_file (str) : /path/to/coverage_file.txt (as produced by compute_tiling.py)
     outdir (str)        : /path/to/save/directory/
+    N_batch (int)       : Number of batches used for scheduling.
     band (str)          : UV band being considered.
     mag_AB (float)      : Assumed kilonova absolute bolometric magnitude.
     astro_rate (list of floats) : Astrophysical rate estimate to use. Must be given as [median, lower bound, upper bound] in yr^-1 Gpc^-3.
@@ -207,7 +208,7 @@ def get_plots_and_stats(allsky_file,coverage_file,outdir,band,mag_AB,astro_rate,
 
 
     events_texp = pd.read_csv(outdir+'/texp_out/'+'allsky_texp_max_'+band+'_batch0.txt',delimiter=' ')
-    for i in range(1,40):
+    for i in range(1,N_batch):
         next_batch = pd.read_csv(outdir+'/texp_out/'+'allsky_texp_max_'+band+'_batch'+str(i)+'.txt',delimiter=' ')
         events_texp = events_texp.append(next_batch,ignore_index=True)
     texp_cut_id_list = events_texp[events_texp['texp_max (s)'] > max_texp]['event_id'].to_list()
@@ -285,9 +286,9 @@ def get_plots_and_stats(allsky_file,coverage_file,outdir,band,mag_AB,astro_rate,
     with open(stat_savename,'w') as outfile:
         print("Number of selected events is",len(obs_dist),"; this is",100*len(obs_dist)/len(events_all),"percent of the catalogue.",file=outfile)
         ## covert to predictions for yearly rate
-        print("Warning: using a simulated rate of {:0.4E} yr^-1 Gpc^-3.".format(sim_rate))
+        print("Using a simulated rate of {:0.4E} yr^-1 Gpc^-3.".format(sim_rate))
         print("Check that this is accurate for your simulations; see comments at beginning of this script for more details.")
-        print("The following predictions use a (astrophysical rate / simulated rate) conversion factor of {:0.4f}.".format(simrate_to_astrorate),file=outfile)
+        print("The following predictions use a median (astrophysical rate / simulated rate) conversion factor of {:0.4f}.".format(simrate_to_astrorate[0]),file=outfile)
         print("The uncertanty given includes the error contributions from lognormal astrophysical rate uncertainty and Poisson count statistics.",file=outfile)
         print("Total number of events is "+arr2bounds(len(events_all)*simrate_to_astrorate),file=outfile)
         print("Predicted number of selected events (in {} yr) is ".format(run_duration)+arr2bounds(len(obs_dist)*simrate_to_astrorate),file=outfile)
@@ -311,7 +312,7 @@ def get_plots_and_stats(allsky_file,coverage_file,outdir,band,mag_AB,astro_rate,
         print("Median:", median_tile_sel,"; Min:",min_tile_sel,"; Max:",max_tile_sel,file=outfile)
         frac = np.sum(obs_tile_arr <=5)/len(obs_tile_arr)
         print("Fraction of selected events covered in <5 tiles is ", frac, file=outfile)
-        print("This corresponds to {} predicted events in 1 yr.".format(arr2bounds(frac*len(obs_dist)*simrate_to_astrorate)),file=outfile)
+        print("This corresponds to {} predicted events in {} yr (90% C.I.).".format(arr2bounds(frac*len(obs_dist)*simrate_to_astrorate),run_duration),file=outfile)
     print("Statistics saved to {}.".format(stat_savename))
 
     print("Making plots...")
@@ -401,19 +402,20 @@ if __name__ == '__main__':
     ## get info from params file
     obs_scenario_dir   = config.get("params","obs_scenario")
     out_dir            = config.get("params","save_directory")
+    N_batch            = int(config.get("params","N_batch_sched"))
     band               = config.get("params","band")
     source_mag         = float(config.get("params","KNe_mag_AB"))
     astro_rate_median  = float(config.get("params","astro_bns_median"))
     astro_rate_bounds  = eval(str(config.get("params","astro_bns_interval_90")))
     sim_rate           = float(config.get("params","sim_bns_rate"))
     run_duration       = float(config.get("params","obs_duration"))
-    max_texp           = config.get("params","max_texp")
-    coverage_threshold = config.get("params","coverage_threshold",fallback=99)
+    max_texp           = float(config.get("params","max_texp"))
+    coverage_threshold = float(config.get("params","coverage_threshold",fallback=99))
     
-    allsky_file = obs_scenario_dir+'/allsky/allsky.dat'
-    coverage_file = outdir+'/allsky_coverage.txt'
+    allsky_file = obs_scenario_dir+'/allsky.dat'
+    coverage_file = out_dir+'/allsky_coverage.txt'
     
     astro_rate = [astro_rate_median, astro_rate_bounds[0], astro_rate_bounds[1]]
     
     ## run the script
-    get_plots_and_stats(allsky_file,coverage_file,outdir,band,source_mag,astro_rate,sim_rate,run_duration,max_texp,coverage_threshold)
+    get_plots_and_stats(allsky_file,coverage_file,out_dir,N_batch,band,source_mag,astro_rate,sim_rate,run_duration,max_texp,coverage_threshold)

@@ -122,4 +122,4 @@ if __name__ == '__main__':
     schedloc = out_dir+'/schedules/'
     
     ## run the script
-    compute_tiling(allsky_sched,fitsloc,schedloc,outdir,duration)
+    compute_tiling(allsky_sched,fitsloc,schedloc,out_dir,duration)
