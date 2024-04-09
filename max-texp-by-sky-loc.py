@@ -42,7 +42,9 @@ from importlib import reload
 reload(uvex.sensitivity)
 reload(zodi)
 
-import sys
+import os, sys, configparser
+
+import argparse
 
 from astropy.coordinates import SkyCoord
 from astropy.time import Time# Pick your favorite date
@@ -57,8 +59,6 @@ from ligo.skymap.bayestar import rasterize
 from ligo.skymap import plot
 from ligo.skymap.postprocess import find_greedy_credible_levels
 
-import os, sys
-
 from glob import glob
 
 
@@ -71,7 +71,7 @@ def estimate_apparent_ABmag(distmean,M_AB=-12.1):
     return m_AB
 
 ## function to get exposure time in a healpix pixel
-def get_pixel_texp(ipix,nside,obstime,source,band):
+def get_pixel_texp(ipix,nside,obstime,source,band,bandpass,area):
     '''
     Inputs:
         ipix : healpix pixel index
@@ -92,13 +92,13 @@ def get_pixel_texp(ipix,nside,obstime,source,band):
     zodi_spec = zodi.zodi_spec_coords(radec, obstime, diag=False)
     if band=='nuv':
         galactic_spec = galactic.galactic_nuv_spec(gal.b)
-        nuv_zodi = Observation(zodi_spec, nuv_band)
-        nuv_galactic = Observation(galactic_spec, nuv_band)
+        nuv_zodi = Observation(zodi_spec, bandpass)
+        nuv_galactic = Observation(galactic_spec, bandpass)
         sky = nuv_zodi.countrate(area=area) + nuv_galactic.countrate(area=area)
     elif band=='fuv':
         galactic_spec_fuv = galactic.galactic_fuv_spec(gal.b)
-        fuv_zodi = Observation(zodi_spec, fuv_band, force='extrap')
-        fuv_galactic = Observation(galactic_spec_fuv, fuv_band, force='extrap')
+        fuv_zodi = Observation(zodi_spec, bandpass, force='extrap')
+        fuv_galactic = Observation(galactic_spec_fuv, bandpass, force='extrap')
         fuv_sky = fuv_zodi.countrate(area=area) + fuv_galactic.countrate(area=area)
 
     ## fuv<->nuv switch
@@ -114,7 +114,7 @@ def get_pixel_texp(ipix,nside,obstime,source,band):
 
 ## Function to get the mean exposure time across the 90% c.l. region
 ## with optional stats (variance, max difference from mean)
-def get_max_texp(cls,nside,start_time,m_obs,band,verbose=True):
+def get_max_texp(cls,nside,start_time,m_obs,band,area,verbose=True):
     '''
     Inputs:
         cls : 90% c.l. pixels as produced by find_greedy_credible_levels
@@ -131,19 +131,31 @@ def get_max_texp(cls,nside,start_time,m_obs,band,verbose=True):
     '''
     ## simulate observation
     sp = SourceSpectrum(ConstFlux1D, amplitude=m_obs*u.ABmag)
-    obs_nuv = Observation(sp, nuv_band)
-    obs_fuv = Observation(sp, fuv_band)
-    source_nuv = obs_nuv.countrate(area=area)
-    source_fuv = obs_fuv.countrate(area=area)
     if band=='nuv':
-        source = source_nuv
+        bandpass = uvex.sensitivity.filters.nuv_bandpass()
+        wave = np.arange(1300, 10000)*u.AA
     elif band=='fuv':
-        source = source_fuv
+        bandpass = uvex.sensitivity.filters.fuv_bandpass()
+        wave = np.arange(1000, 10000)*u.AA
+    
+    obs = Observation(sp,bandpass)
+    source = obs.countrate(area=area)
+    
+#     obs_nuv = Observation(sp, nuv_band)
+#     obs_fuv = Observation(sp, fuv_band)
+#     source_nuv = obs_nuv.countrate(area=area)
+#     source_fuv = obs_fuv.countrate(area=area)
+#     if band=='nuv':
+#         bandpass = 
+#         obs = Observation(sp, bandpass)
+#         source = source_nuv
+#     elif band=='fuv':
+#         source = source_fuv
     texp_list = []
     count = 0
     for ipix, cl in enumerate(cls):
         if cl <=0.9:
-            pix_texp = get_pixel_texp(ipix,nside,start_time,source,band)
+            pix_texp = get_pixel_texp(ipix,nside,start_time,source,band,bandpass,area)
             if np.any(pix_texp == None):
                 count += 1
                 continue
@@ -187,12 +199,6 @@ def max_texp_by_sky_loc(allsky_dir,out_dir,batch_file,band,source_mag,dist_measu
     
     
     ## some intiial setup
-    nuv_band = uvex.sensitivity.filters.nuv_bandpass()
-    fuv_band = uvex.sensitivity.filters.fuv_bandpass()
-    if band=='nuv':
-        wave = np.arange(1300, 10000)*u.AA
-    elif band=='fuv':
-        wave = np.arange(1000, 10000)*u.AA
     area = uvex.sensitivity.config.AREA
     obstime = Time('2021-02-18 09:00:00')
 
@@ -227,7 +233,7 @@ def max_texp_by_sky_loc(allsky_dir,out_dir,batch_file,band,source_mag,dist_measu
     #local_evs = [str(i) for i in [4877,3584, 3977, 5285, 5673, 5958, 7088]]
 
     ## look at every .fits in directory
-    fitsfiles = glob(datadir+'/*.fits')
+    fitsfiles = glob(allsky_dir+'/*.fits')
     fitsnames = np.array(list(map(lambda filepath: filepath.split('/')[-1],fitsfiles)))
 
     rows = []
@@ -255,12 +261,12 @@ def max_texp_by_sky_loc(allsky_dir,out_dir,batch_file,band,source_mag,dist_measu
 
         m_obs = events_texp['apparent AB mag'][events_texp['event_id']==int(file_id)].to_numpy()[0]
 
-        texp_output = get_max_texp(credible_levels,nside,start_time,m_obs,band,verbose=False)
+        texp_output = get_max_texp(credible_levels,nside,start_time,m_obs,band,area,verbose=False)
         if texp_output==None:
             print("Event",file_id,"has an invalid skymap. Increasing NSIDE...")
             skymap_hires = rasterize(skymap_base, healpix_hires.level)['PROB']
             cls_hires = find_greedy_credible_levels(skymap_hires)
-            texp_output_hires = get_max_texp(cls_hires,nside_hires,start_time,m_obs,band,verbose=False)
+            texp_output_hires = get_max_texp(cls_hires,nside_hires,start_time,m_obs,band,area,verbose=False)
             if texp_output_hires==None:
                 print("Event",file_id,"still has an invalid skymap after increasing NSIDE. Skipping...")
                 continue
@@ -279,14 +285,14 @@ def max_texp_by_sky_loc(allsky_dir,out_dir,batch_file,band,source_mag,dist_measu
 
     outname = str(batch_file).split('_')[-1].replace('.txt','')
 
-    events_texp_stats.to_csv(outdir+'/allsky_texp_max_'+band+'_'+outname+'.txt',index=False,sep=' ')
+    events_texp_stats.to_csv(out_dir+'/allsky_texp_max_'+band+'_'+outname+'.txt',index=False,sep=' ')
 
 #     max_texp = 10800 ## old default 10000
     events_texp_stats_cut = events_texp_stats[events_texp_stats['texp_max (s)'] <= max_texp]
 
     # print(events_texp_stats_10k)
 
-    events_texp_stats_cut.to_csv(outdir+'/allsky_texp_max_cut_'+band+'_'+outname+'.txt',index=False,sep=' ')
+    events_texp_stats_cut.to_csv(out_dir+'/allsky_texp_max_cut_'+band+'_'+outname+'.txt',index=False,sep=' ')
     
     return
 
@@ -315,4 +321,4 @@ if __name__ == '__main__':
     texp_out_dir = out_dir+'/texp_out/'
     
     ## run the script
-    max_texp_by_sky_loc(allsky_dir,texp_out_dir,batch_file,band,source_mag,dist_measure,max_texp=max_texp)
+    max_texp_by_sky_loc(allsky_dir,texp_out_dir,args.batch_file,band,source_mag,dist_measure,max_texp=max_texp)

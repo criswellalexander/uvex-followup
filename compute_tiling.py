@@ -21,8 +21,8 @@ from matplotlib.ticker import FormatStrFormatter
 import numpy as np
 from tqdm import tqdm
 from matplotlib.ticker import MaxNLocator
-import sys
-import os
+import sys, os, configparser
+import argparse
 import pandas as pd
 
 def compute_tiling(allsky_sched,fitsloc,schedloc,outdir,duration):

@@ -9,7 +9,7 @@
 #SBATCH -o out.uvex
 cd /home/vuk/crisw015
 source .bashrc
-cd /home/vuk/crisw015/UVEX/uvex-followup-etc-update/
+#cd /home/vuk/crisw015/UVEX/uvex-followup-etc-update/
 conda activate uvenv-etc-update
 
 

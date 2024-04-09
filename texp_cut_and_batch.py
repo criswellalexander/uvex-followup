@@ -7,7 +7,8 @@
 
 import pandas as pd
 import numpy as np
-import os, sys
+import os, sys, configparser
+import argparse
 
 def texp_cut_and_batch(texp_dir,out_dir,N_in,N_out,band,min_texp):
     '''
