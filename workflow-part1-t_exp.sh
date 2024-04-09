@@ -15,6 +15,9 @@ OUTDIR=`grep "^save_directory="  ${PARAMS_FILE} | python3 -c "print(input().spli
 mkdir $OUTDIR
 mkdir "${OUTDIR}/texp_out"
 
+## copy the params file to the output directory for future reference
+cp $PARAMS_FILE "${OUTDIR}/params.ini"
+
 ## get absolute path to the uvex-followup directory
 FOLLOWUP_DIR="$(dirname -- "$( readlink -f -- "$0"; )";)"
 
