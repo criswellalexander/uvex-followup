@@ -7,11 +7,9 @@
 #SBATCH -p amdsmall
 #SBATCH -e error.uvex
 #SBATCH -o out.uvex
-cd /home/vuk/crisw015
-source .bashrc
-#cd /home/vuk/crisw015/UVEX/uvex-followup-etc-update/
-conda activate uvenv-etc-update
 
+#conda activate uvex-followup-env
+conda activate uvenv-etc-update
 
 ## $1 is skymap directory
 ## $2 is the schedule output directory
@@ -30,6 +28,7 @@ SCHED_DIR="${OUTDIR}/schedules/"
 
 ## field1 is event number, field2 is exposure time in ks
 tail -n +2 $2 | while IFS=, read -r field1 field2; do
+    echo "duration is ${DURATION}"
 	num=$field1
 	texp=$field2
 	echo "Processing event ${num}..."

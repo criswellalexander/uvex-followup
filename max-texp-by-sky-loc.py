@@ -52,7 +52,7 @@ obstime = Time('2021-02-18 09:00:00')
 
 from astropy import units as u
 from ligo.skymap.tool import ArgumentParser, FileType
-from dorado.scheduling import mission as _mission
+# from dorado.scheduling import mission as _mission
 
 from ligo.skymap.io import read_sky_map
 from ligo.skymap.bayestar import rasterize

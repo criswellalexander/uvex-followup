@@ -40,7 +40,8 @@ def compute_tiling(allsky_sched,fitsloc,schedloc,outdir,duration):
     ## manually define some arguments
     duration = u.Quantity(duration)
     time_step = u.Quantity('1 min')
-    mission = getattr(_mission, 'uvex')
+#     mission = getattr(_mission, 'uvex')
+    mission = _mission.uvex()
     nside = 64
     delay = 0
 

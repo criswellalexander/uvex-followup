@@ -7,10 +7,8 @@
 #SBATCH -p amdsmall
 #SBATCH -e error.uvex
 #SBATCH -o out.uvex
-cd /home/vuk/crisw015
-source .bashrc
-#cd /home/vuk/crisw015/UVEX/uvex-followup/
-conda activate uvenv-etc-update
+
+conda activate uvex-followup-env
 
 ## $1 is params file
 ## $2 is the downselected allsky CSV. At minimum needs to have 'simulation_id', 'area_(90)', and 'distmean' (or 'dist(90)') columns.

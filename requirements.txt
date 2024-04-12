@@ -1,0 +1,17 @@
+## via conda
+python=3.11
+numpy
+scipy
+astropy
+matplotlib
+healpy
+pandas
+synphot
+specutils
+photutils
+argparse
+tqdm
+
+## via git
+# dorado-scheduling (pip install git+https://github.com/nasa/dorado-scheduling)
+# uvex-mission (git clone https://github.com/uvex-mission/uvex-mission.git; private repo, you will need to request access and make a Github Personal Access Token)s

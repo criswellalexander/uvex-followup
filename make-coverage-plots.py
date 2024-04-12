@@ -174,7 +174,7 @@ def get_plots_and_stats(allsky_file,coverage_file,outdir,N_batch,band,mag_AB,ast
     allsky_file (str) : /path/to/allsky.dat
     coverage_file (str) : /path/to/coverage_file.txt (as produced by compute_tiling.py)
     outdir (str)        : /path/to/save/directory/
-    N_batch (int)       : Number of batches used for scheduling.
+    N_batch (int)       : Number of batches used for preprocessing.
     band (str)          : UV band being considered.
     mag_AB (float)      : Assumed kilonova absolute bolometric magnitude.
     astro_rate (list of floats) : Astrophysical rate estimate to use. Must be given as [median, lower bound, upper bound] in yr^-1 Gpc^-3.
@@ -316,7 +316,7 @@ def get_plots_and_stats(allsky_file,coverage_file,outdir,N_batch,band,mag_AB,ast
     print("Statistics saved to {}.".format(stat_savename))
 
     print("Making plots...")
-    with plt.style.context('seaborn-talk'):
+    with plt.style.context('seaborn-v0_8-talk'):
         ax = plt.axes()
         ax.set_xscale('log')
         ax.set_yscale('log')
@@ -402,7 +402,7 @@ if __name__ == '__main__':
     ## get info from params file
     obs_scenario_dir   = config.get("params","obs_scenario")
     out_dir            = config.get("params","save_directory")
-    N_batch            = int(config.get("params","N_batch_sched"))
+    N_batch            = int(config.get("params","N_batch_preproc"))
     band               = config.get("params","band")
     source_mag         = float(config.get("params","KNe_mag_AB"))
     astro_rate_median  = float(config.get("params","astro_bns_median"))
