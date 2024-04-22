@@ -6,12 +6,15 @@ astropy
 matplotlib
 healpy
 pandas
+ligo.skymap
 synphot
 specutils
 photutils
 argparse
 tqdm
 
-## via git
-# dorado-scheduling (pip install git+https://github.com/nasa/dorado-scheduling)
-# uvex-mission (git clone https://github.com/uvex-mission/uvex-mission.git; private repo, you will need to request access and make a Github Personal Access Token)s
+## via pip/git
+
+# dorado-scheduling (pip install dorado-scheduling)
+# uvex-mission (git clone https://github.com/uvex-mission/uvex-mission.git; cd uvex-mission; pip install -e .)
+#               This is a private repo, you will need to request access and make a Github Personal Access Token)
