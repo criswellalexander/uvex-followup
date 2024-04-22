@@ -2,16 +2,25 @@ uvex-followup provides a set of scripts and a workflow to determine prospects fo
 
 
 #################################
-##      First-time setup:
+##      First-time setup:      ##
+#################################
+Clone this repository to your destination of choice:
+> git clone https://github.com/criswellalexander/uvex-followup
+
 Create a conda environment. If you decide to use a different environment name, you will need to modify the cluster submission scripts (sub_*.slurm) accordingly.
 > conda env create --name uvex-followup-env python=3.11
+
 Activate the environment:
 > conda activate uvex-followup-env
+
 Install ligo.skymap via conda:
 > conda install -y ligo.skymap --channel conda-forge
+
 Install dorado-scheduling.
 > pip install dorado-scheduling
+
 Follow the instructions in the dorado-scheduling quickstart guide for CPLEX access: https://dorado-scheduling.readthedocs.io/en/latest/quickstart.html#to-set-up-the-cplex-optimization-engine
+
 Install uvex-mission. Note that this is currently a private repo; you will need to be granted access.
 The git clone command below will also ask for a password; this is NOT your Github password; you will need to create a Personal Access Token for the uvex-mission repo.
 (See https://stackoverflow.com/questions/2505096/clone-a-private-repository-github, https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens)
@@ -28,7 +37,10 @@ If you intend to use the cluster submission scripts, you will also need to modif
 #SBATCH --mail-user=<your-email@umn.edu>
 (please don't send me emails when your jobs fail)
 
-uvex-followup workflow
+
+#################################
+##   uvex-followup workflow    ##
+#################################
 
 Each step can be run via a provided bash script, or you can use the various python files individually.
 The workflow bash scripts are designed to work with the Minnesota Supercomputing Institute clustes' Slurm job submission framework.
