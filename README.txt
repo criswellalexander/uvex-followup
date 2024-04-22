@@ -9,8 +9,9 @@ Activate the environment:
 > conda activate uvex-followup-env
 Install ligo.skymap via conda:
 > conda install -y ligo.skymap --channel conda-forge
-Install dorado-scheduling, following the quickstart guide here: https://dorado-scheduling.readthedocs.io/en/latest/quickstart.html
-> pip install git+https://github.com/nasa/dorado-scheduling
+Install dorado-scheduling.
+> pip install dorado-scheduling
+Follow the instructions in the dorado-scheduling quickstart guide for CPLEX access: https://dorado-scheduling.readthedocs.io/en/latest/quickstart.html#to-set-up-the-cplex-optimization-engine
 Install uvex-mission. Note that this is currently a private repo; you will need to be granted access.
 The git clone command below will also ask for a password; this is NOT your Github password; you will need to create a Personal Access Token for the uvex-mission repo.
 (See https://stackoverflow.com/questions/2505096/clone-a-private-repository-github, https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens)
@@ -37,7 +38,7 @@ The workflow bash scripts generally cover one [preprocess + cluster submission] 
 All parameters of interest can be modified in the params file. It is recommended to copy default_params.ini before making changes.
 
 0 - activate your conda environment
-> conda activate uvfollow-env
+> conda activate uvex-followup-env
 
 1 - run workflow-part1-t_exp.sh
 This will downselect to events with less than the specified localization area and submit the exposure time calculations, batched, to the cluster.
