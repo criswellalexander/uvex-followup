@@ -210,7 +210,7 @@ def get_plots_and_stats(allsky_file,coverage_file,outdir,N_batch,band,mag_AB,ast
     events_texp = pd.read_csv(outdir+'/texp_out/'+'allsky_texp_max_'+band+'_batch0.txt',delimiter=' ')
     for i in range(1,N_batch):
         next_batch = pd.read_csv(outdir+'/texp_out/'+'allsky_texp_max_'+band+'_batch'+str(i)+'.txt',delimiter=' ')
-        events_texp = events_texp.append(next_batch,ignore_index=True)
+        events_texp = pd.concat([events_texp, next_batch], ignore_index=True)
     texp_cut_id_list = events_texp[events_texp['texp_max (s)'] > max_texp]['event_id'].to_list()
     events_texp_reject = events_all[[(sid in texp_cut_id_list) for sid in events_all['simulation_id']]]
     events_texp_reject_id_list = events_texp_reject['simulation_id'].to_list()

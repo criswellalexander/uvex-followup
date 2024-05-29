@@ -31,6 +31,7 @@ import pandas as pd
 
 from synphot import SourceSpectrum, Observation, SpectralElement
 from synphot.models import ConstFlux1D, BlackBodyNorm1D
+from synphot import exceptions as syn_ex
 
 import astropy.units as u
 import numpy as np
@@ -139,6 +140,9 @@ def get_max_texp(cls,nside,start_time,m_obs,band,area,verbose=True):
         wave = np.arange(1000, 10000)*u.AA
     
     obs = Observation(sp,bandpass)
+    
+    
+    
     source = obs.countrate(area=area)
     
 #     obs_nuv = Observation(sp, nuv_band)
@@ -260,20 +264,26 @@ def max_texp_by_sky_loc(allsky_dir,out_dir,batch_file,band,source_mag,dist_measu
         credible_levels = find_greedy_credible_levels(skymap)
 
         m_obs = events_texp['apparent AB mag'][events_texp['event_id']==int(file_id)].to_numpy()[0]
-
-        texp_output = get_max_texp(credible_levels,nside,start_time,m_obs,band,area,verbose=False)
-        if texp_output==None:
-            print("Event",file_id,"has an invalid skymap. Increasing NSIDE...")
-            skymap_hires = rasterize(skymap_base, healpix_hires.level)['PROB']
-            cls_hires = find_greedy_credible_levels(skymap_hires)
-            texp_output_hires = get_max_texp(cls_hires,nside_hires,start_time,m_obs,band,area,verbose=False)
-            if texp_output_hires==None:
-                print("Event",file_id,"still has an invalid skymap after increasing NSIDE. Skipping...")
-                continue
+        
+        ## this try/except handles the nan/inf errors from synphot when the inferred event distance is very large or inf
+        ## usually only relevant for the 90% C.I. distance measure (which can occasionally be inf even for realistic events)
+        try:
+            texp_output = get_max_texp(credible_levels,nside,start_time,m_obs,band,area,verbose=False)
+            if texp_output==None:
+                print("Event",file_id,"has an invalid skymap. Increasing NSIDE...")
+                skymap_hires = rasterize(skymap_base, healpix_hires.level)['PROB']
+                cls_hires = find_greedy_credible_levels(skymap_hires)
+                texp_output_hires = get_max_texp(cls_hires,nside_hires,start_time,m_obs,band,area,verbose=False)
+                if texp_output_hires==None:
+                    print("Event",file_id,"still has an invalid skymap after increasing NSIDE. Skipping...")
+                    continue
+                else:
+                    texp_max = texp_output_hires
             else:
-                texp_max = texp_output_hires
-        else:
-            texp_max = texp_output
+                texp_max = texp_output
+        except syn_ex.SynphotError:
+            ## for such cases (d_L -> inf), the exposure time will also be inf
+            texp_max = np.inf
         ## create row for dataframe
         area90 = events_texp['area(90)'][events_texp['event_id']==int(file_id)].to_numpy()[0]
         rows.append([file_id,m_obs,area90,texp_max])

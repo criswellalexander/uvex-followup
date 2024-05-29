@@ -31,7 +31,7 @@ def texp_cut_and_batch(texp_dir,out_dir,N_in,N_out,band,min_texp):
     events = pd.read_csv(texp_dir+'allsky_texp_max_cut_'+band+'_batch0.txt',delimiter=' ')
     for i in range(1,N_in):
         next_batch = pd.read_csv(texp_dir+'allsky_texp_max_cut_'+band+'_batch'+str(i)+'.txt',delimiter=' ')
-        events = events.append(next_batch,ignore_index=True)
+        events = pd.concat([events, next_batch], ignore_index=True)
 
     ## liaise calculated t_exp to desired scheduler t_exp
     ## i.e., ensure minimum 500s exposures, convert s to ks, reformat for use by the scheduler
