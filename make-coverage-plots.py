@@ -352,6 +352,8 @@ def get_plots_and_stats(allsky_file,coverage_file,outdir,N_batch,band,mag_AB,ast
         plt.title('Event Selection for UVEX ToO with {}'.format(band.upper())+' $M_{AB}=$'+'${:0.1f}$'.format(mag_AB))
         plot_savename = os.path.join(outdir,'uvex_event_selection_{}_MAB{:0.1f}.png'.format(band,mag_AB))
         plt.savefig(plot_savename,bbox_inches='tight',dpi=300)
+        plot_savename_pdf = os.path.join(outdir,'uvex_event_selection_{}_MAB{:0.1f}.pdf'.format(band,mag_AB))
+        plt.savefig(plot_savename_pdf,bbox_inches='tight',dpi=300)
         plt.close()
 
     plt.figure()
@@ -361,6 +363,8 @@ def get_plots_and_stats(allsky_file,coverage_file,outdir,N_batch,band,mag_AB,ast
     plt.ylabel("Count")
     hist1_savename = os.path.join(outdir,'uvex_texp_histogram_{}_MAB{:0.1f}.png'.format(band,mag_AB))
     plt.savefig(hist1_savename,bbox_inches='tight')
+    hist1_savename_pdf = os.path.join(outdir,'uvex_texp_histogram_{}_MAB{:0.1f}.pdf'.format(band,mag_AB))
+    plt.savefig(hist1_savename_pdf,bbox_inches='tight')
     plt.close()
 
     plt.figure()
@@ -372,6 +376,8 @@ def get_plots_and_stats(allsky_file,coverage_file,outdir,N_batch,band,mag_AB,ast
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))
     hist2_savename = os.path.join(outdir,'uvex_tiling_histogram_{}_MAB{:0.1f}.png'.format(band,mag_AB))
     plt.savefig(hist2_savename,bbox_inches='tight')
+    hist2_savename_pdf = os.path.join(outdir,'uvex_tiling_histogram_{}_MAB{:0.1f}.pdf'.format(band,mag_AB))
+    plt.savefig(hist2_savename_pdf,bbox_inches='tight')
     plt.close()
     
     return
