@@ -311,7 +311,7 @@ def get_plots_and_stats(allsky_file,coverage_file,outdir,N_batch,band,mag_AB,ast
         print("Tiling statistics for selected events (tiles to 99% coverage of 90% localization):",file=outfile)
         print("Median:", median_tile_sel,"; Min:",min_tile_sel,"; Max:",max_tile_sel,file=outfile)
         frac = np.sum(obs_tile_arr <=5)/len(obs_tile_arr)
-        print("Fraction of selected events covered in <5 tiles is ", frac, file=outfile)
+        print("Fraction of selected events covered in <=5 tiles is ", frac, file=outfile)
         print("This corresponds to {} predicted events in {} yr (90% C.I.).".format(arr2bounds(frac*len(obs_dist)*simrate_to_astrorate),run_duration),file=outfile)
     print("Statistics saved to {}.".format(stat_savename))
 
