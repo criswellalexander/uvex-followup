@@ -8,7 +8,7 @@ Clone this repository to your destination of choice:
 > git clone https://github.com/criswellalexander/uvex-followup
 
 Create a conda environment. If you decide to use a different environment name, you will need to modify the cluster submission scripts (sub_*.slurm) accordingly.
-> conda env create --name uvex-followup-env python=3.11
+> conda create --name uvex-followup-env python=3.11
 
 Activate the environment:
 > conda activate uvex-followup-env
