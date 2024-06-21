@@ -203,7 +203,8 @@ def max_texp_by_sky_loc(allsky_dir,out_dir,batch_file,band,source_mag,dist_measu
     
     
     ## some intiial setup
-    area = uvex.sensitivity.config.AREA
+    uvex_config_instance = uvex.sensitivity.config.UVEX()
+    area = uvex_config_instance.AREA
     obstime = Time('2021-02-18 09:00:00')
 
     if dist_measure == 'mean':
