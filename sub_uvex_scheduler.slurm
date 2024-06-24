@@ -8,8 +8,7 @@
 #SBATCH -e error.uvex
 #SBATCH -o out.uvex
 
-#conda activate uvex-followup-env
-conda activate uvenv-etc-update
+conda activate uvex-followup-env
 
 ## $1 is skymap directory
 ## $2 is the schedule output directory
