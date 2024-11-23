@@ -1,12 +1,21 @@
 #!/usr/bin/env python
 # coding: utf-8
 
+
 from astropy import units as u
 from ligo.skymap.tool import ArgumentParser, FileType
-from dorado.scheduling import mission as _mission
-from dorado.scheduling.units import equivalencies
+## -----
+#from m4opt import mission as mission  
+#from dorado.scheduling.units import equivalencies
 
-from astropy.coordinates import ICRS
+# Remove dorado and use M4OPT
+## +++++++
+from m4opt.fov import footprint_healpix
+from regions import RectangleSkyRegion
+from astropy.coordinates import SkyCoord, ICRS
+## +++++++
+
+#from astropy.coordinates import ICRS ## ---
 from astropy_healpix import HEALPix
 from astropy.io import fits
 from astropy.time import Time
@@ -41,7 +50,7 @@ def compute_tiling(allsky_sched,fitsloc,schedloc,outdir,duration):
     duration = u.Quantity(duration)
     time_step = u.Quantity('1 min')
 #     mission = getattr(_mission, 'uvex')
-    mission = _mission.uvex()
+#    mission = _mission.uvex()
     nside = 64
     delay = 0
 
@@ -67,11 +76,28 @@ def compute_tiling(allsky_sched,fitsloc,schedloc,outdir,duration):
         # Read multi-order sky map and rasterize to working resolution
         skymap = read_sky_map(fitsloc+fitsfile, moc=True)['UNIQ', 'PROBDENSITY']
         skymap = rasterize(skymap, healpix.level)['PROB']
+
         # check to see if file is empty before loading because there are empty files for some reason
-        if os.stat(schedloc+schedule).st_size == 0:
-            print("Error: empty schedule for event",event)
-            continue    
+        
+        ## +++++++ reconfigure this ones
+        schedule_path = os.path.join(schedloc, schedule)
+        if not os.path.isfile(schedule_path):
+            print(f"Warning: schedule file not found for event {event}: {schedule_path}")
+            continue
+
+        if os.stat(schedule_path).st_size == 0:
+            print(f"Error: empty schedule for event {event}")
+            continue
+    
         schedule = QTable.read(schedloc+schedule, format='ascii.ecsv')
+        
+        # Define a rectangular sky region centered at (0°, 0°) with width and height of 3.5°
+        region_center = SkyCoord(ra=0 * u.deg, dec=0 * u.deg)
+        region_width = 3.5 * u.deg
+        region_height = 3.5 * u.deg
+        sky_region = RectangleSkyRegion(center=region_center, width=region_width, height=region_height)
+
+        ## +++++++
 
         indices = np.asarray([], dtype=np.intp)
         tiles_to_99pct = None
@@ -79,19 +105,21 @@ def compute_tiling(allsky_sched,fitsloc,schedloc,outdir,duration):
         reached_99 = False
 
         for row in schedule:
-            row_count += 1
-            new_indices = mission.fov.footprint_healpix(
-                healpix, row['center'], row['roll'])
-            indices = np.unique(np.concatenate((indices, new_indices)))
-            if (100*skymap[indices].sum() > 99) and (reached_99==False):
-                tiles_to_99pct = row_count
-                reached_99 = True
+    	    if row[0] != 'slew':  # Only process if action is not 'slew'
+               row_count += 1
+               target_coord = row['target_coord']
+               new_indices =footprint_healpix(healpix, sky_region, target_coord)
+               indices = np.unique(np.concatenate((indices, new_indices)))
+               if (100*skymap[indices].sum() > 99) and (reached_99==False):
+                  tiles_to_99pct = row_count
+                  reached_99 = True
         tiles_total = row_count
         total_prob = 100*skymap[indices].sum()
         rows.append([event,total_prob,texp,tiles_to_99pct,tiles_total])
 
         print("Percent coverage is",total_prob,"% for event",event)
-
+#    import pdb
+#    pdb.set_trace()
     ## Format and save
     events_cov = pd.DataFrame(rows,columns=['event_id','percent_coverage','texp_sched (ks)','tiles_to_99pct','tiles_total'])
     # events_cov['texp_sched (s)'] = texp_list

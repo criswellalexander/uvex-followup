@@ -1,14 +1,15 @@
 #!/bin/bash -l
-#SBATCH --time=24:00:00
+#SBATCH --partition=cpu
+#SBATCH --account=bcrv-delta-cpu
+#SBATCH --time=12:00:00
 #SBATCH --ntasks=1
 #SBATCH --mem=30gb
-#SBATCH --mail-type=FAIL 
-#SBATCH --mail-user=crisw015@umn.edu
-#SBATCH -p amdsmall
+#SBATCH --mail-type=FAIL
+#SBATCH --mail-user=leggi014@umn.edu
 #SBATCH -e error.uvex
 #SBATCH -o out.uvex
 
-conda activate uvex-followup-env
+#conda activate uvex-followup-env
 
 ## $1 is skymap directory
 ## $2 is the schedule output directory
@@ -32,8 +33,8 @@ tail -n +2 $2 | while IFS=, read -r field1 field2; do
 	texp=$field2
 	echo "Processing event ${num}..."
 	echo "Exposure time is ${texp} ks."
-	dorado-scheduling "${SKYMAP_DIR}/${num}.fits" -o "${SCHED_DIR}/${num}.ecsv" -j --mission=uvex --exptime="${texp} ks" --duration="${DURATION}" --roll-step='360 deg' --skygrid-method=sinusoidal --skygrid-step='10 deg2' --nside=128 --delay='10 yr'
+	m4opt schedule "${SKYMAP_DIR}/${num}.fits"  "${SCHED_DIR}/${num}.ecsv" --mission=uvex --exptime="${texp} ks"  --deadline="24hour" --nside=128 --timelimit="20min" --deadline="24hour"
 done
 
-conda deactivate
+#conda deactivate
 
